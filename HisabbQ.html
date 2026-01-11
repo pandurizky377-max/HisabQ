@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HisabQ - Kalkulator Zakat & Waris</title>
+    
+    <!-- SEO & Personal Branding Meta Tags -->
+    <meta name="description" content="HisabQ - Aplikasi kalkulator Zakat dan Waris (Wasiat) yang dikembangkan oleh Pandu Rizky Prasistyo. Memudahkan perhitungan muamalah secara akurat.">
+    <meta name="author" content="Pandu Rizky Prasistyo">
+    <meta name="keywords" content="HisabQ, Pandu Rizky Prasistyo, Kalkulator Zakat, Kalkulator Waris, Developer Aplikasi Islami">
+    
+    <!-- Open Graph untuk Social Media -->
+    <meta property="og:title" content="HisabQ by Pandu Rizky Prasistyo">
+    <meta property="og:description" content="Aplikasi perhitungan Zakat & Waris akurat.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://hisabq.netlify.app">
+
+    <!-- JSON-LD Schema: Memberitahu Google AI Siapa Kamu -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "HisabQ",
+      "url": "https://hisabq.netlify.app",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "author": {
+        "@type": "Person",
+        "name": "Pandu Rizky Prasistyo",
+        "jobTitle": "Software Developer",
+        "url": "https://instagram.com/pandurizkyprasistyo",
+        "sameAs": [
+          "https://instagram.com/pandurizkyprasistyo"
+        ]
+      },
+      "description": "Kalkulator Zakat dan Waris untuk membantu umat Muslim menghitung kewajiban finansial sesuai syariat."
+    }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .tab-active { border-bottom: 3px solid #10b981; color: #064e3b; font-weight: 700; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04); }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+        .modal { transition: opacity 0.25s ease; }
+    </style>
+</head>
+<body class="pb-12">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-100 sticky top-0 z-30">
+        <div class="max-w-md mx-auto px-6 py-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-extrabold text-emerald-700 tracking-tight">Hisab<span class="text-slate-800">Q</span></h1>
+                <p class="text-[9px] font-bold text-slate-400 -mt-1 tracking-tighter uppercase">developed by pandu rizky p.</p>
+            </div>
+            <a href="https://instagram.com/pandurizkyprasistyo" target="_blank" class="text-[10px] font-bold bg-slate-100 text-slate-600 px-3 py-1.5 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                Contact Dev
+            </a>
+        </div>
+        <div class="max-w-md mx-auto flex border-t border-slate-50">
+            <button onclick="switchTab('zakat')" id="tab-zakat" class="flex-1 py-3 text-sm font-medium text-slate-400 transition-all tab-active text-center">Zakat</button>
+            <button onclick="switchTab('waris')" id="tab-waris" class="flex-1 py-3 text-sm font-medium text-slate-400 transition-all text-center">Waris</button>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-6">
+        
+        <!-- SECTION ZAKAT -->
+        <div id="section-zakat" class="space-y-6">
+            <div class="bg-emerald-600 rounded-[2rem] p-6 text-white card-shadow">
+                <p class="text-xs font-bold opacity-80 uppercase tracking-widest mb-1">Kewajiban Zakat</p>
+                <div id="zakat-result-container-header">
+                    <h2 id="zakat-result" class="text-2xl font-extrabold leading-tight">Rp 0</h2>
+                </div>
+                <div id="zakat-detail-text" class="mt-2 text-[10px] opacity-90 font-medium italic">Silakan masukkan data harta atau ternak.</div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-6 space-y-4 card-shadow">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Jenis Zakat</label>
+                    <select id="jenis-zakat" onchange="updateZakatUI()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 appearance-none">
+                        <option value="maal">Zakat Maal (Tabungan/Emas)</option>
+                        <option value="perdagangan">Zakat Perdagangan</option>
+                        <option value="pertanian">Zakat Pertanian (Biji/Buah)</option>
+                        <option value="ternak">Zakat Hewan Ternak</option>
+                    </select>
+                </div>
+
+                <div id="zakat-inputs" class="space-y-4">
+                    <!-- Dinamis via JS -->
+                </div>
+
+                <!-- Info Box untuk Nisab -->
+                <div id="zakat-info-box" class="p-4 bg-amber-50 rounded-2xl border border-amber-100 hidden text-amber-700">
+                    <p id="zakat-info-text" class="text-xs leading-relaxed font-semibold italic"></p>
+                </div>
+
+                <!-- Kontainer Definisi Istilah -->
+                <div id="zakat-terms-container" class="hidden p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Kamus Istilah Ternak</p>
+                    <ul id="zakat-terms-list" class="space-y-1 text-[10px] text-slate-600 leading-relaxed font-medium list-disc ml-4">
+                        <!-- Dinamis -->
+                    </ul>
+                </div>
+
+                <!-- Kontainer Khusus Multi-Opsi Ternak -->
+                <div id="zakat-options-container" class="hidden space-y-3 pt-2">
+                    <div class="flex items-center gap-2 px-1">
+                        <div class="h-px bg-slate-100 flex-1"></div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Opsi Kombinasi Sah</p>
+                        <div class="h-px bg-slate-100 flex-1"></div>
+                    </div>
+                    <div id="zakat-options-list" class="space-y-2"></div>
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <p class="text-[9px] text-emerald-700 font-bold leading-relaxed italic">
+                            * Muzakki diperbolehkan memilih kombinasi yang paling mudah dan tidak memberatkan hartanya (Kaidah Fiqih).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION WARIS -->
+        <div id="section-waris" class="hidden space-y-6">
+             <div class="bg-white rounded-[2rem] p-6 card-shadow">
+                <h3 class="font-bold text-slate-800 mb-4">Harta Warisan</h3>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Total Harta Bersih (Rp)</label>
+                    <input type="text" id="harta-waris" placeholder="0" oninput="handleInput(this)" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 text-lg">
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[2rem] p-6 card-shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-slate-800">Ahli Waris Utama</h3>
+                    <button onclick="toggleModal(true)" class="text-[10px] font-bold bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl flex items-center gap-1 hover:bg-emerald-100 transition-all">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                        Panduan
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-50 rounded-2xl space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-semibold text-slate-700">Status Pasangan</span>
+                            <select id="waris-pasangan" onchange="toggleIstriQty()" class="bg-white border-none rounded-xl text-xs font-bold p-2 outline-none">
+                                <option value="none">Tidak ada</option>
+                                <option value="istri">Istri</option>
+                                <option value="suami">Suami</option>
+                            </select>
+                        </div>
+                        <div id="qty-istri-container" class="hidden flex items-center justify-between pt-2 border-t border-slate-200">
+                            <span class="text-xs font-medium text-slate-500">Jumlah Istri</span>
+                            <div class="flex items-center space-x-3">
+                                <button onclick="changeQty('jml-istri', -1)" class="w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded text-emerald-600 font-bold">-</button>
+                                <input type="number" id="jml-istri" value="1" readonly class="w-6 bg-transparent border-none text-center font-bold text-slate-700 outline-none">
+                                <button onclick="changeQty('jml-istri', 1, 4)" class="w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded text-emerald-600 font-bold">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-3 bg-slate-50 rounded-2xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Anak Laki</p>
+                            <div class="flex items-center justify-between">
+                                <button onclick="changeQty('anak-lk', -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-emerald-600 font-extrabold shadow-sm">-</button>
+                                <input type="number" id="anak-lk" value="0" readonly class="w-8 bg-transparent border-none text-center font-bold text-slate-700">
+                                <button onclick="changeQty('anak-lk', 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-emerald-600 font-extrabold shadow-sm">+</button>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-2xl">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Anak Peremp.</p>
+                            <div class="flex items-center justify-between">
+                                <button onclick="changeQty('anak-pr', -1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-emerald-600 font-extrabold shadow-sm">-</button>
+                                <input type="number" id="anak-pr" value="0" readonly class="w-8 bg-transparent border-none text-center font-bold text-slate-700">
+                                <button onclick="changeQty('anak-pr', 1)" class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-emerald-600 font-extrabold shadow-sm">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
+                            <span class="text-sm font-semibold text-slate-700">Ada Ayah Kandung?</span>
+                            <input type="checkbox" id="ada-ayah" onchange="toggleLeluhur()" class="w-5 h-5 accent-emerald-500">
+                        </div>
+                        <div id="kakek-container" class="flex items-center justify-between p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <span class="text-sm font-semibold text-emerald-700 italic">Ada Kakek (Ayah Ayah)?</span>
+                            <input type="checkbox" id="ada-kakek" class="w-5 h-5 accent-emerald-500">
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
+                            <span class="text-sm font-semibold text-slate-700">Ada Ibu Kandung?</span>
+                            <input type="checkbox" id="ada-ibu" onchange="toggleLeluhur()" class="w-5 h-5 accent-emerald-500">
+                        </div>
+                         <div id="nenek-container" class="flex items-center justify-between p-3 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <span class="text-sm font-semibold text-emerald-700 italic">Ada Nenek (Ibu/Bapak)?</span>
+                            <input type="checkbox" id="ada-nenek" class="w-5 h-5 accent-emerald-500">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="calcWaris()" class="w-full mt-6 bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">Hitung Pembagian</button>
+            </div>
+            <div id="waris-result-container" class="hidden space-y-4">
+                <h3 class="font-bold text-slate-800 px-2 uppercase text-[10px] tracking-widest">Detail Rincian Waris</h3>
+                <div id="waris-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- MODAL PANDUAN WARIS -->
+        <div id="waris-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-6">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="toggleModal(false)"></div>
+            <div class="bg-white w-full max-w-md rounded-[2.5rem] p-6 shadow-2xl z-10 relative max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-emerald-700">Panduan Ahli Waris</h3>
+                    <button onclick="toggleModal(false)" class="p-2 bg-slate-100 rounded-full text-slate-400 hover:text-slate-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                        <p class="text-[11px] font-bold text-emerald-700 uppercase mb-2 tracking-wider">Pasangan & Anak</p>
+                        <ul class="text-[10px] text-slate-600 list-disc ml-4 space-y-2 font-medium">
+                            <li><b>Istri:</b> 1/8 (ada anak), 1/4 (tidak ada anak).</li>
+                            <li><b>Suami:</b> 1/4 (ada anak), 1/2 (tidak ada anak).</li>
+                            <li><b>Anak Laki-laki:</b> Ashabah (2:1 dari perempuan).</li>
+                            <li><b>Anak Perempuan:</b> 1/2 (sendiri), 2/3 (2+ orang), atau Ashabah jika ada saudara laki-laki.</li>
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <p class="text-[11px] font-bold text-slate-600 uppercase mb-2 tracking-wider">Orang Tua & Leluhur</p>
+                        <ul class="text-[10px] text-slate-500 list-disc ml-4 space-y-2 font-medium">
+                            <li><b>Ibu:</b> 1/6 (ada anak/saudara), 1/3 (tidak ada).</li>
+                            <li><b>Ayah:</b> 1/6 (ada anak laki), 1/6+Sisa (anak pr saja), Ashabah (tidak ada anak).</li>
+                            <li><b>Kakek:</b> Mengganti Ayah jika Ayah wafat.</li>
+                            <li><b>Nenek:</b> 1/6 (jika Ibu/Ayah wafat sesuai jalurnya).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center space-y-2">
+            <p class="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">Developed by</p>
+            <a href="https://instagram.com/pandurizkyprasistyo" target="_blank" class="inline-flex flex-col items-center space-y-1 text-slate-400 hover:text-emerald-600 transition-colors">
+                <span class="text-sm font-extrabold text-slate-600">Pandu Rizky Prasistyo</span>
+                <span class="text-[10px] font-bold">@pandurizkyprasistyo</span>
+            </a>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- UTILS ---
+        function formatNumber(n) {
+            return n.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        function unformatNumber(n) {
+            if (typeof n === 'number') return n;
+            if (!n) return 0;
+            return parseFloat(n.replace(/\./g, "")) || 0;
+        }
+        function handleInput(input) {
+            input.value = formatNumber(input.value);
+        }
+        function formatIDR(val) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+        }
+        function changeQty(id, delta, max = 99) {
+            const input = document.getElementById(id);
+            let val = parseInt(input.value) || 0;
+            val = Math.max(0, Math.min(max, val + delta));
+            if(id === 'jml-istri' && val < 1) val = 1;
+            input.value = val;
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('waris-modal');
+            modal.classList.toggle('hidden', !show);
+            document.body.style.overflow = show ? 'hidden' : 'auto';
+        }
+
+        function switchTab(tab) {
+            document.getElementById('section-zakat').classList.toggle('hidden', tab !== 'zakat');
+            document.getElementById('section-waris').classList.toggle('hidden', tab !== 'waris');
+            document.getElementById('tab-zakat').classList.toggle('tab-active', tab === 'zakat');
+            document.getElementById('tab-waris').classList.toggle('tab-active', tab === 'waris');
+        }
+
+        function toggleIstriQty() {
+            const p = document.getElementById('waris-pasangan').value;
+            document.getElementById('qty-istri-container').classList.toggle('hidden', p !== 'istri');
+        }
+
+        function toggleLeluhur() {
+            const ayah = document.getElementById('ada-ayah').checked;
+            const ibu = document.getElementById('ada-ibu').checked;
+            document.getElementById('kakek-container').style.opacity = ayah ? "0.4" : "1";
+            document.getElementById('kakek-container').style.pointerEvents = ayah ? "none" : "auto";
+            if(ayah) document.getElementById('ada-kakek').checked = false;
+            document.getElementById('nenek-container').style.opacity = ibu ? "0.4" : "1";
+            document.getElementById('nenek-container').style.pointerEvents = ibu ? "none" : "auto";
+            if(ibu) document.getElementById('ada-nenek').checked = false;
+        }
+
+        // --- ZAKAT LOGIC ---
+        const TERMS = {
+            kambing: [
+                "<b>Kambing (Ma'iz):</b> Minimal usia 2 tahun (masuk tahun ke-3).",
+                "<b>Domba (Dha'nu):</b> Minimal usia 1 tahun (masuk tahun ke-2)."
+            ],
+            sapi: [
+                "<b>Tabi':</b> Sapi usia 1 tahun (masuk tahun ke-2).",
+                "<b>Musinnah:</b> Sapi usia 2 tahun (masuk tahun ke-3)."
+            ],
+            unta: [
+                "<b>Bintu Makhad:</b> Unta betina usia 1 tahun.",
+                "<b>Bintu Labun:</b> Unta betina usia 2 tahun.",
+                "<b>Hiqqah:</b> Unta betina usia 3 tahun.",
+                "<b>Jadz'ah:</b> Unta betina usia 4 tahun."
+            ]
+        };
+
+        function updateZakatUI() {
+            const jenis = document.getElementById('jenis-zakat').value;
+            const container = document.getElementById('zakat-inputs');
+            container.innerHTML = '';
+            
+            if (jenis === 'maal' || jenis === 'perdagangan') {
+                container.innerHTML = `
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Harga Emas Saat Ini (Rp/Gram)</label>
+                        <input type="text" id="harga-emas" placeholder="0" oninput="handleInput(this); calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">${jenis === 'maal' ? 'Total Harta (Rp)' : 'Total Aset Dagang (Rp)'}</label>
+                        <input type="text" id="val-zakat" placeholder="0" oninput="handleInput(this); calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700">
+                    </div>`;
+            } else if (jenis === 'pertanian') {
+                container.innerHTML = `
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Hasil Panen (Kg Gabah)</label>
+                        <input type="number" id="val-zakat" placeholder="0" oninput="calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Metode Pengairan</label>
+                        <select id="irigasi" onchange="calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 appearance-none">
+                            <option value="alami">Hujan/Alami (10%)</option>
+                            <option value="buatan">Irigasi Berbayar (5%)</option>
+                        </select>
+                    </div>`;
+            } else if (jenis === 'ternak') {
+                container.innerHTML = `
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Jenis Hewan</label>
+                        <select id="hewan-ternak" onchange="calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700 appearance-none">
+                            <option value="kambing">Kambing / Domba</option>
+                            <option value="sapi">Sapi / Kerbau</option>
+                            <option value="unta">Unta</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Jumlah Ekor</label>
+                        <input type="number" id="val-zakat" placeholder="0" oninput="calcZakat()" class="w-full mt-1 p-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none font-bold text-slate-700">
+                    </div>`;
+            }
+            calcZakat();
+        }
+
+        function findCombinations(total, valA, valB, labelA, labelB) {
+            let combs = [];
+            for (let x = 0; x <= Math.ceil(total/valA); x++) {
+                for (let y = 0; y <= Math.ceil(total/valB); y++) {
+                    let sum = (x * valA) + (y * valB);
+                    if (sum >= total && sum < total + 10) { 
+                        let str = [];
+                        if(x > 0) str.push(`${x} ${labelA}`);
+                        if(y > 0) str.push(`${y} ${labelB}`);
+                        combs.push({ text: str.join(" & "), score: sum });
+                    }
+                }
+            }
+            combs.sort((a,b) => a.score - b.score);
+            const unique = [];
+            const map = new Map();
+            for (const item of combs) {
+                if(!map.has(item.text)){
+                    map.set(item.text, true);
+                    unique.push(item.text);
+                }
+            }
+            return unique.slice(0, 3);
+        }
+
+        function calcZakat() {
+            const jenis = document.getElementById('jenis-zakat').value;
+            const inputVal = document.getElementById('val-zakat');
+            if(!inputVal) return;
+            
+            let amount = unformatNumber(inputVal.value);
+            let resultText = "Rp 0";
+            let detailText = "";
+            let infoBox = document.getElementById('zakat-info-box');
+            let infoText = document.getElementById('zakat-info-text');
+            let termsContainer = document.getElementById('zakat-terms-container');
+            let termsList = document.getElementById('zakat-terms-list');
+            let optionsContainer = document.getElementById('zakat-options-container');
+            let optionsList = document.getElementById('zakat-options-list');
+            
+            infoBox.classList.add('hidden');
+            termsContainer.classList.add('hidden');
+            optionsContainer.classList.add('hidden');
+            optionsList.innerHTML = '';
+
+            if (jenis === 'maal' || jenis === 'perdagangan') {
+                const hEmasInput = document.getElementById('harga-emas');
+                const hargaEmasGram = hEmasInput ? unformatNumber(hEmasInput.value) : 0;
+                const nisabMaal = 85 * hargaEmasGram; 
+                if (hargaEmasGram <= 0) {
+                    detailText = "Input harga emas untuk cek nisab.";
+                } else if (amount >= nisabMaal) {
+                    resultText = formatIDR(amount * 0.025);
+                    detailText = "Kadar Zakat: 2.5%";
+                } else if (amount > 0) {
+                    infoBox.classList.remove('hidden');
+                    infoText.innerText = `Belum mencapai Nisab (${formatIDR(nisabMaal)}).`;
+                }
+            } else if (jenis === 'pertanian') {
+                if (amount >= 653) {
+                    const tarif = document.getElementById('irigasi').value === 'alami' ? 0.1 : 0.05;
+                    resultText = (amount * tarif).toFixed(1) + " Kg";
+                    detailText = `Kadar Zakat: ${tarif * 100}%`;
+                } else if (amount > 0) {
+                    infoBox.classList.remove('hidden');
+                    infoText.innerText = "Belum mencapai Nisab (653 Kg).";
+                }
+            } else if (jenis === 'ternak') {
+                const hewan = document.getElementById('hewan-ternak').value;
+                if (amount > 0) {
+                    termsContainer.classList.remove('hidden');
+                    termsList.innerHTML = TERMS[hewan].map(t => `<li>${t}</li>`).join("");
+                }
+
+                if (hewan === 'kambing') {
+                    detailText = "Kaidah: 40-120 (1), 121-200 (2), 201-399 (3). Per kelipatan 100 pas mulai 400 (4), dst.";
+                    const spesifikasi = "(Kambing 2 thn / Domba 1 thn)";
+                    
+                    if (amount < 40) { 
+                        resultText = "Rp 0"; 
+                        infoBox.classList.remove('hidden'); 
+                        infoText.innerText = "Nisab Kambing: 40 ekor."; 
+                    }
+                    else if (amount >= 40 && amount <= 120) resultText = `1 Ekor ${spesifikasi}`;
+                    else if (amount >= 121 && amount <= 200) resultText = `2 Ekor ${spesifikasi}`;
+                    else if (amount >= 201 && amount <= 399) resultText = `3 Ekor ${spesifikasi}`;
+                    else if (amount >= 400) {
+                        let count = Math.floor(amount / 100);
+                        resultText = `${count} Ekor ${spesifikasi}`;
+                    }
+                } else if (hewan === 'sapi') {
+                    detailText = "Kaidah: Setiap 30 ekor wajib 1 Tabi' dan setiap 40 ekor wajib 1 Musinnah.";
+                    if (amount < 30) resultText = "Rp 0";
+                    else if (amount >= 30 && amount <= 39) resultText = "1 Tabi'";
+                    else if (amount >= 40 && amount <= 59) resultText = "1 Musinnah";
+                    else if (amount >= 60 && amount <= 69) resultText = "2 Tabi'";
+                    else if (amount >= 70 && amount <= 79) resultText = "1 Tabi' & 1 Musinnah";
+                    else if (amount >= 80 && amount <= 89) resultText = "2 Musinnah";
+                    else {
+                        const combos = findCombinations(amount, 30, 40, "Tabi'", "Musinnah");
+                        resultText = combos[0];
+                        if(combos.length > 1) {
+                            optionsContainer.classList.remove('hidden');
+                            combos.forEach(c => optionsList.innerHTML += `<div class="p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-700 shadow-sm">${c}</div>`);
+                        }
+                    }
+                } else if (hewan === 'unta') {
+                    detailText = "Kaidah: Di atas 120: Gunakan pola kelipatan tiap 40 (1 Bintu Labun) & tiap 50 (1 Hiqqah).";
+                    if (amount < 5) resultText = "Rp 0";
+                    else if (amount <= 24) resultText = Math.floor(amount/5) + " Ekor Kambing";
+                    else if (amount <= 35) resultText = "1 Bintu Makhad";
+                    else if (amount <= 45) resultText = "1 Bintu Labun";
+                    else if (amount <= 60) resultText = "1 Hiqqah";
+                    else if (amount <= 75) resultText = "1 Jadz'ah";
+                    else if (amount <= 90) resultText = "2 Bintu Labun";
+                    else if (amount <= 120) resultText = "2 Hiqqah";
+                    else {
+                        const combos = findCombinations(amount, 40, 50, "Bintu Labun", "Hiqqah");
+                        resultText = combos[0];
+                        if(combos.length > 1) {
+                            optionsContainer.classList.remove('hidden');
+                            combos.forEach(c => optionsList.innerHTML += `<div class="p-3 bg-white border border-slate-100 rounded-xl text-xs font-bold text-slate-700 shadow-sm">${c}</div>`);
+                        }
+                    }
+                }
+            }
+            document.getElementById('zakat-result').innerText = resultText;
+            document.getElementById('zakat-detail-text').innerText = detailText;
+        }
+
+        // --- WARIS LOGIC ---
+        function calcWaris() {
+            const totalHarta = unformatNumber(document.getElementById('harta-waris').value);
+            if (totalHarta <= 0) return;
+            const pasangan = document.getElementById('waris-pasangan').value;
+            const nAnakLk = parseInt(document.getElementById('anak-lk').value) || 0;
+            const nAnakPr = parseInt(document.getElementById('anak-pr').value) || 0;
+            const adaAyah = document.getElementById('ada-ayah').checked;
+            const adaIbu = document.getElementById('ada-ibu').checked;
+            const adaKakek = document.getElementById('ada-kakek').checked;
+            const adaNenek = document.getElementById('ada-nenek').checked;
+            const nIstri = parseInt(document.getElementById('jml-istri').value) || 1;
+            const adaAnak = (nAnakLk + nAnakPr) > 0;
+            let hasil = []; let sisa = totalHarta;
+
+            if (adaIbu) { let p = adaAnak ? (1/6) : (1/3); let j = totalHarta * p; hasil.push({ n: "Ibu", p: adaAnak ? "1/6" : "1/3", v: j }); sisa -= j; }
+            else if (adaNenek) { let j = totalHarta * (1/6); hasil.push({ n: "Nenek", p: "1/6", v: j }); sisa -= j; }
+
+            if (adaAyah) { let j = adaAnak ? (totalHarta / 6) : 0; if (j > 0) { hasil.push({ n: "Ayah", p: "1/6", v: j }); sisa -= j; } }
+            else if (adaKakek) { let j = adaAnak ? (totalHarta / 6) : 0; if (j > 0) { hasil.push({ n: "Kakek", p: "1/6", v: j }); sisa -= j; } }
+
+            if (pasangan === 'istri') {
+                let pt = adaAnak ? (1/8) : (1/4); let jt = totalHarta * pt;
+                hasil.push({ n: `Istri (${nIstri})`, p: `${adaAnak?'1/8':'1/4'}`, v: jt, detail: nIstri > 1 ? `Per orang: ${formatIDR(jt/nIstri)}` : null });
+                sisa -= jt;
+            } else if (pasangan === 'suami') {
+                let p = adaAnak ? (1/4) : (1/2); let j = totalHarta * p; hasil.push({ n: "Suami", p: adaAnak ? "1/4" : "1/2", v: j }); sisa -= j;
+            }
+
+            if (adaAnak) {
+                const totalBagian = (nAnakLk * 2) + (nAnakPr * 1); const unit = sisa / totalBagian;
+                if (nAnakLk > 0) hasil.push({ n: `Anak Laki-laki (${nAnakLk})`, p: "Sisa (2:1)", v: unit * 2 * nAnakLk, detail: nAnakLk > 1 ? `Per orang: ${formatIDR(unit * 2)}` : null });
+                if (nAnakPr > 0) hasil.push({ n: `Anak Perempuan (${nAnakPr})`, p: nAnakLk > 0 ? "Sisa (1x)" : "Fardhu", v: unit * 1 * nAnakPr, detail: nAnakPr > 1 ? `Per orang: ${formatIDR(unit * 1)}` : null });
+                sisa = 0;
+            } else if (sisa > 0) {
+                let lIdx = hasil.findIndex(x => x.n === "Ayah" || x.n === "Kakek");
+                if (lIdx !== -1) { hasil[lIdx].v += sisa; hasil[lIdx].p += " + Sisa"; }
+                else if (adaAyah) hasil.push({ n: "Ayah", p: "Ashabah (Sisa)", v: sisa });
+                else if (adaKakek) hasil.push({ n: "Kakek", p: "Ashabah (Sisa)", v: sisa });
+                sisa = 0;
+            }
+
+            const list = document.getElementById('waris-list'); list.innerHTML = '';
+            hasil.forEach(h => {
+                list.innerHTML += `<div class="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm"><div class="flex justify-between items-start"><span class="text-sm font-extrabold text-slate-800">${h.n}</span><span class="font-bold text-emerald-600">${formatIDR(h.v)}</span></div><div class="flex justify-between items-center mt-1"><span class="text-[9px] font-bold text-slate-400 uppercase bg-slate-50 px-2 py-0.5 rounded-md">${h.p}</span>${h.detail ? `<span class="text-[9px] text-slate-500 font-bold">${h.detail}</span>` : ''}</div></div>`;
+            });
+            document.getElementById('waris-result-container').classList.remove('hidden');
+        }
+
+        window.onload = updateZakatUI;
+    </script>
+</body>
+</html>
